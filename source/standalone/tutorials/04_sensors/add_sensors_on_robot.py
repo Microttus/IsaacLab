@@ -94,6 +94,7 @@ class SensorsSceneCfg(InteractiveSceneCfg):
     )
 
 
+
 def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
     """Run the simulator."""
     # Define simulation stepping
