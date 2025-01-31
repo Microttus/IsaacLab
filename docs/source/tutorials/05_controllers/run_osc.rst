@@ -1,7 +1,7 @@
 Using an operational space controller
 =====================================
 
-.. currentmodule:: omni.isaac.lab
+.. currentmodule:: isaaclab
 
 Sometimes, controlling the end-effector pose of the robot using a differential IK controller is not sufficient.
 For example, we might want to enforce a very specific pose tracking error dynamics in the task space, actuate the robot
@@ -24,13 +24,13 @@ The Code
 ~~~~~~~~
 
 The tutorial corresponds to the ``run_osc.py`` script in the
-``source/standalone/tutorials/05_controllers`` directory.
+``scripts/tutorials/05_controllers`` directory.
 
 
 .. dropdown:: Code for run_osc.py
    :icon: code
 
-   .. literalinclude:: ../../../../source/standalone/tutorials/05_controllers/run_osc.py
+   .. literalinclude:: ../../../../scripts/tutorials/05_controllers/run_osc.py
       :language: python
       :linenos:
 
@@ -86,16 +86,28 @@ If desired, the inertial coupling between the translational and rotational axes 
 If it is desired to include the gravity compensation in the operational space command, the ``gravity_compensation``
 should be set to ``True``.
 
+A final consideration regarding the operational space control is what to do with the null-space of redundant robots.
+The null-space is the subspace of the joint space that does not affect the task space coordinates. If nothing is done
+to control the null-space, the robot joints will float without moving the end-effector. This might be undesired (e.g.,
+the robot joints might get close to their limits), and one might want to control the robot behaviour within its
+null-space. One way to do is to set ``nullspace_control`` to ``"position"`` (by default it is ``"none"``) which
+integrates a null-space PD controller to attract the robot joints to desired targets without affecting the task
+space. The behaviour of this null-space controller can be defined using the ``nullspace_stiffness`` and
+``nullspace_damping_ratio`` arguments. Please note that theoretical decoupling of the null-space and task space
+accelerations is only possible when ``inertial_dynamics_decoupling`` is set to ``True`` and
+``partial_inertial_dynamics_decoupling`` is set to ``False``.
+
 The included OSC implementation performs the computation in a batched format and uses PyTorch operations.
 
 In this tutorial, we will use ``"pose_abs"`` for controlling the motion in all axes except the z-axis and
 ``"wrench_abs"`` for controlling the force in the z-axis. Moreover, we will include the full inertia decoupling in
 the motion control and not include the gravity compensation, as the gravity is disabled from the robot configuration.
-Finally, we set the impedance mode to ``"variable_kp"`` to dynamically change the stiffness values
+We set the impedance mode to ``"variable_kp"`` to dynamically change the stiffness values
 (``motion_damping_ratio_task`` is set to ``1``: the kd values adapt according to kp values to maintain a critically
-damped response).
+damped response). Finally, ``nullspace_control`` is set to use ``"position"`` where the joint set points are provided
+to be the center of the joint position limits.
 
-.. literalinclude:: ../../../../source/standalone/tutorials/05_controllers/run_osc.py
+.. literalinclude:: ../../../../scripts/tutorials/05_controllers/run_osc.py
    :language: python
    :start-at: # Create the OSC
    :end-at: osc = OperationalSpaceController(osc_cfg, num_envs=scene.num_envs, device=sim.device)
@@ -104,13 +116,14 @@ Updating the states of the robot
 --------------------------------------------
 
 The OSC implementation is a computation-only class. Thus, it expects the user to provide the necessary information
-about the robot. This includes the robot's Jacobian matrix, mass/inertia matrix, end-effector pose, velocity, and
-contact force, all in the root frame. Moreover, the user should provide gravity compensation vector, if desired.
+about the robot. This includes the robot's Jacobian matrix, mass/inertia matrix, end-effector pose, velocity, contact
+force (all in the root frame), and finally, the joint positions and velocities. Moreover, the user should provide
+gravity compensation vector and null-space joint position targets if required.
 
-.. literalinclude:: ../../../../source/standalone/tutorials/05_controllers/run_osc.py
+.. literalinclude:: ../../../../scripts/tutorials/05_controllers/run_osc.py
    :language: python
    :start-at: # Update robot states
-   :end-before: return jacobian_b, mass_matrix, gravity, ee_pose_b, ee_vel_b, root_pose_w, ee_pose_w, ee_force_b
+   :end-before: # Update the target commands
 
 
 Computing robot command
@@ -126,7 +139,7 @@ concatanated together.
 In this tutorial, the desired wrench is already defined w.r.t. the task frame, and the desired pose is transformed
 to the task frame as the following:
 
-.. literalinclude:: ../../../../source/standalone/tutorials/05_controllers/run_osc.py
+.. literalinclude:: ../../../../scripts/tutorials/05_controllers/run_osc.py
    :language: python
    :start-at: # Convert the target commands to the task frame
    :end-at: return command, task_frame_pose_b
@@ -135,14 +148,14 @@ The OSC command is set with the command vector in the task frame, the end-effect
 task (reference) frame pose in the base frame as the following. This information is needed, as the internal
 computations are done in the base frame.
 
-.. literalinclude:: ../../../../source/standalone/tutorials/05_controllers/run_osc.py
+.. literalinclude:: ../../../../scripts/tutorials/05_controllers/run_osc.py
    :language: python
    :start-at: # set the osc command
    :end-at: osc.set_command(command=command, current_ee_pose_b=ee_pose_b, current_task_frame_pose_b=task_frame_pose_b)
 
 The joint effort/torque values are computed using the provided robot states and the desired command as the following:
 
-.. literalinclude:: ../../../../source/standalone/tutorials/05_controllers/run_osc.py
+.. literalinclude:: ../../../../scripts/tutorials/05_controllers/run_osc.py
    :language: python
    :start-at: # compute the joint commands
    :end-at: )
@@ -150,7 +163,7 @@ The joint effort/torque values are computed using the provided robot states and 
 
 The computed joint effort/torque targets can then be applied on the robot.
 
-.. literalinclude:: ../../../../source/standalone/tutorials/05_controllers/run_osc.py
+.. literalinclude:: ../../../../scripts/tutorials/05_controllers/run_osc.py
    :language: python
    :start-at: # apply actions
    :end-at: robot.write_data_to_sim()
@@ -163,7 +176,7 @@ You can now run the script and see the result:
 
 .. code-block:: bash
 
-   ./isaaclab.sh -p source/standalone/tutorials/05_controllers/run_osc.py --num_envs 128
+   ./isaaclab.sh -p scripts/tutorials/05_controllers/run_osc.py --num_envs 128
 
 The script will start a simulation with 128 robots. The robots will be controlled using the OSC.
 The current and desired end-effector poses should be displayed using frame markers in addition to the red tilted wall.
