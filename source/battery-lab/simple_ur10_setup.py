@@ -13,12 +13,12 @@ Usage from IsaacLab:
 .. code-block:: bash
 
     # For example, launch with 3 environments
-    ./isaaclab.sh -p path/to/my_ur10_scene_script.py --num_envs 3
+    ./isaaclab.sh -p path/to/simple_ur10_setup.py --num_envs 3
 """
 
 import argparse
 
-from omni.isaac.lab.app import AppLauncher
+from isaaclab.app import AppLauncher
 
 # Build the CLI parser
 parser = argparse.ArgumentParser(description="Example script for an InteractiveScene with UR10 robots + custom CAD.")
@@ -37,13 +37,17 @@ simulation_app = app_launcher.app
 import torch
 
 # IsaacLab imports
-import omni.isaac.lab.sim as sim_utils
-from omni.isaac.lab_assets import UR10_CFG  # If you have a pre-defined UR10 config. Otherwise define your own.
+import isaaclab.sim as sim_utils
+from isaaclab_assets import UR10_CFG  # If you have a pre-defined UR10 config. Otherwise define your own.
 
-from omni.isaac.lab.assets import ArticulationCfg, AssetBaseCfg, RigidPrimCfg, RigidBodyPropertiesCfg
-from omni.isaac.lab.scene import InteractiveScene, InteractiveSceneCfg
-from omni.isaac.lab.sim import SimulationContext
-from omni.isaac.lab.utils import configclass
+
+import isaacsim.core.utils.prims as prim_utils
+from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
+
+from isaaclab.assets import ArticulationCfg, AssetBase, AssetBaseCfg, RigidObjectCfg
+from isaaclab.scene import InteractiveScene, InteractiveSceneCfg
+from isaaclab.sim import SimulationContext
+from isaaclab.utils import configclass
 
 @configclass
 class UR10SceneCfg(InteractiveSceneCfg):
@@ -68,17 +72,11 @@ class UR10SceneCfg(InteractiveSceneCfg):
     robot: ArticulationCfg = UR10_CFG.replace(prim_path="{ENV_REGEX_NS}/UR10")
 
     # Add a custom CAD as a rigid body with gravity enabled
-    # Replace the usd_path below with your actual path.
-    my_custom_cad: RigidPrimCfg = RigidPrimCfg(
-        prim_path="{ENV_REGEX_NS}/MyCAD",
+    my_box: RigidObjectCfg = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/BoxAssembly",
         spawn=sim_utils.UsdFileCfg(
             usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass.usd",
-            activate_contact_sensors=False
         ),
-        rigid_props=RigidBodyPropertiesCfg(
-            disable_gravity=False,  # gravity is enabled
-            max_depenetration_velocity=5.0,
-        )
     )
 
 
@@ -91,7 +89,7 @@ def run_simulator(sim: SimulationContext, scene: InteractiveScene):
     robot = scene["robot"]
 
     # Access the custom CAD rigid body if needed:
-    my_cad = scene["my_custom_cad"]
+    box = scene["my_box"]
 
     sim_dt = sim.get_physics_dt()
     step_count = 0
@@ -114,9 +112,9 @@ def run_simulator(sim: SimulationContext, scene: InteractiveScene):
             robot.write_joint_state_to_sim(joint_pos, joint_vel)
 
             # (Optional) reset the custom CAD root state if you want to place it at a known location
-            cad_root_state = my_cad.data.default_root_state.clone()
-            cad_root_state[:, :3] += scene.env_origins  # place one in each environment
-            my_cad.write_root_state_to_sim(cad_root_state)
+            #box_root_state = box.data.default_root_state.clone()
+            #box_root_state[:, :3] += scene.env_origins  # place one in each environment
+            #box.write_root_state_to_sim(box_root_state)
 
             # Clear buffers
             scene.reset()
