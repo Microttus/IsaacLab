@@ -46,8 +46,9 @@ from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 
 from isaaclab.assets import ArticulationCfg, AssetBase, AssetBaseCfg, RigidObjectCfg
 from isaaclab.scene import InteractiveScene, InteractiveSceneCfg
-from isaaclab.sim import SimulationContext
+from isaaclab.sim import SimulationContext, UsdFileCfg, RigidBodyPropertiesCfg, ArticulationRootPropertiesCfg
 from isaaclab.utils import configclass
+
 
 @configclass
 class UR10SceneCfg(InteractiveSceneCfg):
@@ -76,6 +77,9 @@ class UR10SceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/BoxAssembly",
         spawn=sim_utils.UsdFileCfg(
             usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass.usd",
+            #disable_gravity=False,
+            #collision_enabled=True,
+            articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
         ),
     )
 
@@ -89,7 +93,7 @@ def run_simulator(sim: SimulationContext, scene: InteractiveScene):
     robot = scene["robot"]
 
     # Access the custom CAD rigid body if needed:
-    box = scene["my_box"]
+    #box = scene["my_box"]
 
     sim_dt = sim.get_physics_dt()
     step_count = 0
