@@ -17,6 +17,7 @@ Usage from IsaacLab:
 """
 
 import argparse
+from gettext import translation
 
 from isaaclab.app import AppLauncher
 
@@ -38,11 +39,7 @@ import torch
 
 # IsaacLab imports
 import isaaclab.sim as sim_utils
-from isaaclab_assets import UR10_CFG  # If you have a pre-defined UR10 config. Otherwise define your own.
-
-
-import isaacsim.core.utils.prims as prim_utils
-from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
+from isaaclab_assets import UR10_CFG  # If you have a pre-defined UR10 config. Otherwise, define your own.
 
 from isaaclab.assets import ArticulationCfg, AssetBase, AssetBaseCfg, RigidObjectCfg
 from isaaclab.scene import InteractiveScene, InteractiveSceneCfg
@@ -70,30 +67,30 @@ class UR10SceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.DomeLightCfg(intensity=3000.0, color=(0.75, 0.75, 0.75))
     )
     # UR10 articulation
-    robot: ArticulationCfg = UR10_CFG.replace(prim_path="{ENV_REGEX_NS}/UR10")
+    robot: ArticulationCfg = UR10_CFG.replace(prim_path="/World/envs/env_.*/UR10")
 
     # Add a custom CAD as a rigid body with gravity enabled
-    my_box: RigidObjectCfg = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/BoxAssembly",
+
+    my_box: AssetBaseCfg = AssetBaseCfg(
+        prim_path="/World/envs/env_.*/BoxAssembly",
         spawn=sim_utils.UsdFileCfg(
-            usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass.usd",
-            #disable_gravity=False,
-            #collision_enabled=True,
-            articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
+            usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
+            scale=(0.5, 0.5, 0.5),
+            #articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
         ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.7, 0, 0.3)),
     )
 
 
 def run_simulator(sim: SimulationContext, scene: InteractiveScene):
     """
-    Runs a simple simulation loop that periodically resets all UR10s and applies random joint efforts.
-    The custom CAD is present as well, subject to gravity. We do nothing special with it here.
+    Runs a simple simulation loop
     """
     # Access the UR10 group using the config name: "robot"
     robot = scene["robot"]
 
     # Access the custom CAD rigid body if needed:
-    #box = scene["my_box"]
+    box = scene["my_box"]
 
     sim_dt = sim.get_physics_dt()
     step_count = 0
@@ -115,10 +112,11 @@ def run_simulator(sim: SimulationContext, scene: InteractiveScene):
             joint_pos += torch.rand_like(joint_pos) * 0.2  # random small offsets
             robot.write_joint_state_to_sim(joint_pos, joint_vel)
 
-            # (Optional) reset the custom CAD root state if you want to place it at a known location
-            #box_root_state = box.data.default_root_state.clone()
-            #box_root_state[:, :3] += scene.env_origins  # place one in each environment
-            #box.write_root_state_to_sim(box_root_state)
+            # CAD reset
+            box_state = robot.data.default_root_state.clone()
+            box_state[:, :3] += scene.env_origins
+            #box.write_root_link_pose_to_sim(box_state[:, 7:])
+            #box.write_root_state_to_sim(box_state)
 
             # Clear buffers
             scene.reset()
