@@ -74,7 +74,7 @@ class UR10SceneCfg(InteractiveSceneCfg):
     my_box: AssetBaseCfg = AssetBaseCfg(
         prim_path="/World/envs/env_.*/BoxAssembly",
         spawn=sim_utils.UsdFileCfg(
-            usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
+            usd_path="/home/rhino/IsaacLab/source/battery_lab/Four_box_ass_2.usd",
             scale=(0.5, 0.5, 0.5),
             #articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
         ),

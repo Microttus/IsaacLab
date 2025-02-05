@@ -101,35 +101,35 @@ class RobotBoxManagerCfg(ManagerBasedRLEnvCfg):
         RigidObjectCfg(
             prim_path="/World/envs/env_.*/BoxAssembly/Part_0",
             spawn=sim_utils.UsdFileCfg(
-                usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
+                usd_path="/battery_lab/Four_box_ass_2.usd",
                 scale=(0.5, 0.5, 0.5),
             ),
         ),
         RigidObjectCfg(
             prim_path="/World/envs/env_.*/BoxAssembly/Part_1",
             spawn=sim_utils.UsdFileCfg(
-                usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
+                usd_path="/battery_lab/Four_box_ass_2.usd",
                 scale=(0.5, 0.5, 0.5),
             ),
         ),
         RigidObjectCfg(
             prim_path="/World/envs/env_.*/BoxAssembly/Part_2",
             spawn=sim_utils.UsdFileCfg(
-                usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
+                usd_path="/battery_lab/Four_box_ass_2.usd",
                 scale=(0.5, 0.5, 0.5),
             ),
         ),
         RigidObjectCfg(
             prim_path="/World/envs/env_.*/BoxAssembly/Part_3",
             spawn=sim_utils.UsdFileCfg(
-                usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
+                usd_path="/battery_lab/Four_box_ass_2.usd",
                 scale=(0.5, 0.5, 0.5),
             ),
         ),
         RigidObjectCfg(
             prim_path="/World/envs/env_.*/BoxAssembly/Part_4",
             spawn=sim_utils.UsdFileCfg(
-                usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
+                usd_path="/battery_lab/Four_box_ass_2.usd",
                 scale=(0.5, 0.5, 0.5),
             ),
         ),
