@@ -10,7 +10,7 @@ Humanoid locomotion environment.
 import gymnasium as gym
 
 from . import agents
-from .h1_env import H1Env, H1EnvCfg
+#from .h1_env import H1Env, H1EnvCfg
 
 ##
 # Register Gym environments.
@@ -27,7 +27,7 @@ gym.register(
         "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
     },
 )
-
+'''
 gym.register(
     id="Isaac-H1-Direct-v0",
     entry_point="omni.isaac.lab_tasks.direct.humanoid:H1Env",
@@ -39,3 +39,4 @@ gym.register(
         "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
     },
 )
+'''

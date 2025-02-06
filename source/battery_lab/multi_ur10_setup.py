@@ -52,7 +52,7 @@ from isaaclab.assets import (
 )
 from isaaclab.scene import InteractiveScene, InteractiveSceneCfg
 from isaaclab.sim import SimulationContext, UsdFileCfg, RigidBodyPropertiesCfg, ArticulationRootPropertiesCfg
-from isaaclab.utils import configclass
+from isaaclab.utils import configclass, scale
 
 
 @configclass
@@ -77,41 +77,33 @@ class UR10SceneCfg(InteractiveSceneCfg):
     # UR10 articulation
     robot: ArticulationCfg = UR10_CFG.replace(prim_path="/World/envs/env_.*/UR10")
 
-    # Add a custom CAD as a rigid body with gravity enabled
-    box_1_cfg: RigidObjectCfg = RigidObjectCfg(
-        prim_path="/World/envs/env_.*/BoxAssembly/Part_0",
+    # Add a custom CAD
+    center: RigidObjectCfg = RigidObjectCfg(
+        prim_path="/World/envs/env_.*/Center",
         spawn=sim_utils.UsdFileCfg(
-            usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
-            scale=(0.5, 0.5, 0.5),
+            usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/mesh/center.usd",
+            articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
+            scale=(2.0, 2.0, 2.0),
         ),
-    ),
-    box_2_cfg: RigidObjectCfg = RigidObjectCfg(
-        prim_path="/World/envs/env_.*/BoxAssembly/Part_1",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(1.0, 0.0, 0.1)),
+    )
+    pipe: RigidObjectCfg = RigidObjectCfg(
+        prim_path="/World/envs/env_.*/Pipe",
         spawn=sim_utils.UsdFileCfg(
-            usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
-            scale=(0.5, 0.5, 0.5),
+            usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/mesh/pipe.usd",
+            articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
+            scale=(2.0, 2.0, 2.0),
         ),
-    ),
-    box_3_cfg: RigidObjectCfg = RigidObjectCfg(
-        prim_path="/World/envs/env_.*/BoxAssembly/Part_2",
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(1.0, 0.0, 0.1)),
+    )
+    pin: RigidObjectCfg = RigidObjectCfg(
+        prim_path="/World/envs/env_.*/Pin",
         spawn=sim_utils.UsdFileCfg(
-            usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
-            scale=(0.5, 0.5, 0.5),
+            usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/mesh/pin.usd",
+            articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
+            scale=(2.0, 2.0, 2.0),
         ),
-    ),
-    box_4_cfg: RigidObjectCfg = RigidObjectCfg(
-        prim_path="/World/envs/env_.*/BoxAssembly/Part_3",
-        spawn=sim_utils.UsdFileCfg(
-            usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
-            scale=(0.5, 0.5, 0.5),
-        ),
-    ),
-    box_5_cfg: RigidObjectCfg = RigidObjectCfg(
-        prim_path="/World/envs/env_.*/BoxAssembly/Part_4",
-        spawn=sim_utils.UsdFileCfg(
-            usd_path="/home/rhino/IsaacLab/source/battery-lab/Four_box_ass_2.usd",
-            scale=(0.5, 0.5, 0.5),
-        ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(1.0, 0.0, 0.1)),
     )
 
 
@@ -123,11 +115,9 @@ def run_simulator(sim: SimulationContext, scene: InteractiveScene):
     robot = scene["robot"]
 
     # Access the custom CAD rigid body if needed:
-    box_1 = scene["box_1_cfg"]
-    box_2 = scene["box_2_cfg"]
-    box_3 = scene["box_3_cfg"]
-    box_4 = scene["box_4_cfg"]
-    box_5 = scene["box_5_cfg"]
+    center = scene["center"]
+    pipe = scene["pipe"]
+    pin = scene["pin"]
 
     sim_dt = sim.get_physics_dt()
     step_count = 0
@@ -149,11 +139,20 @@ def run_simulator(sim: SimulationContext, scene: InteractiveScene):
             joint_pos += torch.rand_like(joint_pos) * 0.2  # random small offsets
             robot.write_joint_state_to_sim(joint_pos, joint_vel)
 
-            # CAD reset
-            #box_state = robot.data.default_root_state.clone()
-            #box_state[:, :3] += scene.env_origins
-            #box.write_root_link_pose_to_sim(box_state[:, 7:])
-            #box.write_root_state_to_sim(box_state)
+            # Center reset
+            center_state = center.data.default_root_state.clone()
+            center_state[:, :3] += scene.env_origins
+            center.write_root_state_to_sim(center_state)
+
+            # Pipe reset
+            pipe_state = pipe.data.default_root_state.clone()
+            pipe_state[:, :3] += scene.env_origins
+            pipe.write_root_state_to_sim(pipe_state)
+
+            # Pin reset
+            pin_state = pipe.data.default_root_state.clone()
+            pin_state[:, :3] += scene.env_origins
+            pin.write_root_state_to_sim(pin_state)
 
             # Clear buffers
             scene.reset()
