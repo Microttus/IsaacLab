@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import math
 from dataclasses import MISSING
 
 import isaaclab.sim as sim_utils
@@ -29,7 +28,6 @@ from isaaclab_assets import FRANKA_PANDA_CFG
 
 # MDP
 import isaaclab_tasks.manager_based.battery_lab.franka_cylinder.mdp as mdp
-from isaaclab_tasks.manager_based.battery_lab.franka_cylinder.mdp import cylinder_position_in_world_frame
 
 
 @configclass
@@ -163,7 +161,7 @@ class ObservationsCfg:
 
     # observation groups
     policy: PolicyCfg = PolicyCfg()  # single group named policy
-    #subtask: SubtaskCfg = SubtaskCfg()
+    subtask: SubtaskCfg = SubtaskCfg()
 
 
 @configclass
@@ -209,14 +207,16 @@ class RewardsCfg:
     # (2) Failure penalty
     terminating = RewTerm(func=mdp.is_terminated, weight=-2.0)
     # (3) Joint velocity penalty
+    """
     joint_vel_penalty = RewTerm(
         func=mdp.joint_vel_limits,
         weight=-0.01,
         params={
             "asset_cfg": SceneEntityCfg("robot"), #TODO: Can specify joints!
-            "soft_ratio": 2.0,
+            "soft_ratio": 20.0,
         }
     )
+    """
     # (4) End effector near objects #TODO: Add this
         # end_effector_distance = RewTerm(func=my_mdp.end_effector_box_dist, weight=-1.0)
     # (5) Objects in correct pos    #TODO: Add this
@@ -225,7 +225,7 @@ class RewardsCfg:
 
     center_penalty = RewTerm(
         func=mdp.position_error_reward,
-        weight=0.5,
+        weight=1.0,
         params={
             "object_cfg": SceneEntityCfg("center"),
             "target_pos": (0.5, 0.5, 0.0),
@@ -234,7 +234,7 @@ class RewardsCfg:
 
     pin_penalty = RewTerm(
         func=mdp.position_error_reward,
-        weight=0.5,
+        weight=1.5,
         params={
             "object_cfg": SceneEntityCfg("pin"),
             "target_pos": (0.5, -0.5, 0.0),
@@ -243,7 +243,7 @@ class RewardsCfg:
 
     pipe_penalty = RewTerm(
         func=mdp.position_error_reward,
-        weight=0.5,
+        weight=2.0,
         params={
             "object_cfg": SceneEntityCfg("pipe"),
             "target_pos": (1.0, 0.0, 0.0),
@@ -297,7 +297,7 @@ class FrankaCylinderEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 2
-        self.episode_length_s = 5.0
+        self.episode_length_s = 10.0
         # viewer
         self.viewer.eye = (8.0, 0.0, 5.0)
         # sim

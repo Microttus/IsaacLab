@@ -27,4 +27,4 @@ def position_error_reward(
     # 4) Distance
     dist = torch.norm(curr_pos_w - target_pos_t, dim=1)
     # 5) Return negative distance as a penalty
-    return torch.sum(-dist)
+    return torch.sum(dist)
