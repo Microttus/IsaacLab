@@ -207,43 +207,64 @@ class RewardsCfg:
     # (2) Failure penalty
     terminating = RewTerm(func=mdp.is_terminated, weight=-2.0)
     # (3) Joint velocity penalty
-    """
     joint_vel_penalty = RewTerm(
         func=mdp.joint_vel_limits,
-        weight=-0.01,
+        weight=-0.1,
         params={
             "asset_cfg": SceneEntityCfg("robot"), #TODO: Can specify joints!
-            "soft_ratio": 20.0,
+            "soft_ratio": 10.0,
         }
     )
-    """
     # (4) End effector near objects #TODO: Add this
-        # end_effector_distance = RewTerm(func=my_mdp.end_effector_box_dist, weight=-1.0)
+    center_effector_penalty = RewTerm(
+        func=mdp.object_distance_error_reward,
+        weight=-0.05,
+        params={
+            "robot_cfg": SceneEntityCfg("robot"),
+            "ee_frame_cfg": SceneEntityCfg("ee_frame"),
+            "object_cfg": SceneEntityCfg("center"),
+        }
+    )
+    pipe_effector_penalty = RewTerm(
+        func=mdp.object_distance_error_reward,
+        weight=-0.05,
+        params={
+            "robot_cfg": SceneEntityCfg("robot"),
+            "ee_frame_cfg": SceneEntityCfg("ee_frame"),
+            "object_cfg": SceneEntityCfg("pipe"),
+        }
+    )
+    pin_effector_penalty = RewTerm(
+        func=mdp.object_distance_error_reward,
+        weight=-0.05,
+        params={
+            "robot_cfg": SceneEntityCfg("robot"),
+            "ee_frame_cfg": SceneEntityCfg("ee_frame"),
+            "object_cfg": SceneEntityCfg("pin"),
+        }
+    )
     # (5) Objects in correct pos    #TODO: Add this
         # success = RewTerm(func=my_mdp.task_success, weight=5.0)
     # (4) Object pos compared to target
-
     center_penalty = RewTerm(
         func=mdp.position_error_reward,
-        weight=1.0,
+        weight=-1.0,
         params={
             "object_cfg": SceneEntityCfg("center"),
             "target_pos": (0.5, 0.5, 0.0),
         }
     )
-
     pin_penalty = RewTerm(
         func=mdp.position_error_reward,
-        weight=1.5,
+        weight=-1.5,
         params={
             "object_cfg": SceneEntityCfg("pin"),
             "target_pos": (0.5, -0.5, 0.0),
         }
     )
-
     pipe_penalty = RewTerm(
         func=mdp.position_error_reward,
-        weight=2.0,
+        weight=-2.0,
         params={
             "object_cfg": SceneEntityCfg("pipe"),
             "target_pos": (1.0, 0.0, 0.0),
