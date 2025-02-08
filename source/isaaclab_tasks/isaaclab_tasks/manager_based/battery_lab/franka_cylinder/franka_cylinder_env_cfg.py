@@ -215,7 +215,7 @@ class RewardsCfg:
             "soft_ratio": 10.0,
         }
     )
-    # (4) End effector near objects #TODO: Add this
+    # (4) End effector near objects
     center_effector_penalty = RewTerm(
         func=mdp.object_distance_error_reward,
         weight=-0.05,
@@ -279,18 +279,29 @@ class TerminationsCfg:
 
     # (1) Timeout
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
-    # (2) Add box velocity etc #TODO: Add something sensible
-        # box_fell = DoneTerm(func=my_mdp.box_fell_off_table)
-    # (3) If objects has high speed
-    """
-    center_speed = DoneTerm(
-        func=mdp.object_speed_over_max,
+    # (2) Object outside env
+    center_out = DoneTerm(
+        func=mdp.object_outside_bounds,
         params={
-            "max_speed": 30.0,
-            "asset_cfg": SceneEntityCfg("center")},
-       time_out=True,
+            "asset_cfg": SceneEntityCfg("center"),
+            "bounds": (-3.0, 3.0),
+        }
     )
-    """
+    pipe_out = DoneTerm(
+        func=mdp.object_outside_bounds,
+        params={
+            "asset_cfg": SceneEntityCfg("pipe"),
+            "bounds": (-3.0, 3.0),
+        }
+    )
+    pin_out = DoneTerm(
+        func=mdp.object_outside_bounds,
+        params={
+            "asset_cfg": SceneEntityCfg("pin"),
+            "bounds": (-3.0, 3.0),
+        }
+    )
+
 
 
 #
