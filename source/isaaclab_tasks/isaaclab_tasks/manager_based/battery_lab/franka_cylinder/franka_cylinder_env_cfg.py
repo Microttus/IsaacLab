@@ -217,8 +217,8 @@ class RewardsCfg:
     )
     # (4) End effector near objects
     center_effector_penalty = RewTerm(
-        func=mdp.object_distance_error_reward,
-        weight=-0.05,
+        func=mdp.object_distance_reward,
+        weight=0.05,
         params={
             "robot_cfg": SceneEntityCfg("robot"),
             "ee_frame_cfg": SceneEntityCfg("ee_frame"),
@@ -226,8 +226,8 @@ class RewardsCfg:
         }
     )
     pipe_effector_penalty = RewTerm(
-        func=mdp.object_distance_error_reward,
-        weight=-0.05,
+        func=mdp.object_distance_reward,
+        weight=0.05,
         params={
             "robot_cfg": SceneEntityCfg("robot"),
             "ee_frame_cfg": SceneEntityCfg("ee_frame"),
@@ -235,39 +235,39 @@ class RewardsCfg:
         }
     )
     pin_effector_penalty = RewTerm(
-        func=mdp.object_distance_error_reward,
-        weight=-0.05,
+        func=mdp.object_distance_reward,
+        weight=0.05,
         params={
             "robot_cfg": SceneEntityCfg("robot"),
             "ee_frame_cfg": SceneEntityCfg("ee_frame"),
             "object_cfg": SceneEntityCfg("pin"),
         }
     )
-    # (5) Objects in correct pos    #TODO: Add this
+    # (5) Objects in correct pos    #TODO: Add final reward
         # success = RewTerm(func=my_mdp.task_success, weight=5.0)
     # (4) Object pos compared to target
     center_penalty = RewTerm(
-        func=mdp.position_error_reward,
-        weight=-1.0,
+        func=mdp.object_distance_lin_reward,
+        weight=3.0,
         params={
             "object_cfg": SceneEntityCfg("center"),
-            "target_pos": (0.5, 0.5, 0.0),
+            "target": (0.5, 0.5, 0.0),
         }
     )
     pin_penalty = RewTerm(
-        func=mdp.position_error_reward,
-        weight=-1.5,
+        func=mdp.object_distance_lin_reward,
+        weight=3.0,
         params={
             "object_cfg": SceneEntityCfg("pin"),
-            "target_pos": (0.5, -0.5, 0.0),
+            "target": (0.5, -0.5, 0.0),
         }
     )
     pipe_penalty = RewTerm(
-        func=mdp.position_error_reward,
-        weight=-2.0,
+        func=mdp.object_distance_lin_reward,
+        weight=3.0,
         params={
             "object_cfg": SceneEntityCfg("pipe"),
-            "target_pos": (1.0, 0.0, 0.0),
+            "target": (1.0, 0.0, 0.0),
         }
     )
 
@@ -316,7 +316,7 @@ class FrankaCylinderEnvCfg(ManagerBasedRLEnvCfg):
     print(f"NVIDIA root dir : {ISAACLAB_NUCLEUS_DIR}/NVIDIA")
 
     # scene settings
-    scene: FrankaCylinderSceneCfg = FrankaCylinderSceneCfg(num_envs=16, env_spacing=2.0)
+    scene: FrankaCylinderSceneCfg = FrankaCylinderSceneCfg(num_envs=64, env_spacing=2.0)
     # MDP settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
