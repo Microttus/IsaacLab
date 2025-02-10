@@ -11,24 +11,12 @@ from isaaclab.utils.math import wrap_to_pi
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
-def position_error_reward(
-        env: ManagerBasedRLEnv,
-        object_cfg: SceneEntityCfg,
-        target_pos=(0.0, 0.0, 0.0)
-):
-    """
-    Example: penalty = - distance(object_pos, target_pos).
-    """
-    # 1) Rigid object handle
-    obj: RigidObject = env.scene[object_cfg.name]
-    # 2) Current position
-    curr_pos_w = obj.data.root_pos_w  # shape (num_envs, 3)
-    # 3) Convert your param to a (num_envs, 3) tensor (if using multiple envs):
-    target_pos_t = torch.tensor(target_pos, device=env.device).expand(curr_pos_w.shape[0], -1)
-    # 4) Distance
-    dist = torch.norm(curr_pos_w - target_pos_t, dim=1)
-    # 5) Return the absolut distance
-    return torch.sum(torch.abs(dist))
+
+
+"""
+Custom position tracking rewards
+"""
+
 
 def object_distance_error_reward(
     env: ManagerBasedRLEnv,
@@ -48,7 +36,7 @@ def object_distance_error_reward(
 
     return torch.sum(torch.abs(pose_diff))
 
-def object_distance_reward(
+def object_frame_distance_lin_reward(
     env: ManagerBasedRLEnv,
     robot_cfg: SceneEntityCfg,
     ee_frame_cfg: SceneEntityCfg,
@@ -88,7 +76,7 @@ def object_distance_reward(
     return reward
 
 
-def object_distance_lin_reward(
+def object_target_distance_lin_reward(
         env: ManagerBasedRLEnv,
         object_cfg: SceneEntityCfg,
         target: tuple[float, float, float],
@@ -126,5 +114,41 @@ def object_distance_lin_reward(
 
     # Compute the reward using an exponential decay: the closer the object is to the target, the higher the reward.
     reward = torch.exp(-scale * distance)
+
+    return reward
+
+def object_2_distance_lin_reward(
+    env: ManagerBasedRLEnv,
+    main_object_cfg: SceneEntityCfg,
+    ref_object_cfg: SceneEntityCfg,
+    scale: float = 1.0
+) -> torch.Tensor:
+    """
+    Computes a reward based on the distance between two objects.
+    The reward is higher when the object is further apart from each other.
+
+    Args:
+        env: The RL environment instance.
+        main_object_cfg: Configuration for the main movable object.
+        ref_object_cfg: Configuration for the reference object.
+        scale: Scaling factor for the decay; higher values make the reward drop off faster with distance.
+
+    Returns:
+        A tensor of shape [num_envs] with rewards, where values are in (0, 1) (higher = higher reward).
+    """
+    # Retrieve the scene elements.
+    main_obj: RigidObject = env.scene[main_object_cfg.name]
+    ref_obj: RigidObject = env.scene[ref_object_cfg.name]
+
+    # Get the world positions.
+    main_object_pos = main_obj.data.root_pos_w      # Expected shape: [num_envs, dims]
+    ref_object_pos = ref_obj.data.root_pos_w
+
+    # Compute the Euclidean distance between the object and the end effector.
+    distance = torch.linalg.vector_norm(main_object_pos - ref_object_pos, dim=1)  # Shape: [num_envs]
+
+    # Convert the distance into a reward. Using an exponential decay yields a reward close to 1 when distance is small,
+    # and close to 0 when the distance is large.
+    reward = 1 - torch.exp(-scale * distance)
 
     return reward

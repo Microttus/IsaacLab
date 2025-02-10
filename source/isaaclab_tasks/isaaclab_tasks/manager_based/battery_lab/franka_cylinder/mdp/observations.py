@@ -22,6 +22,14 @@ def cylinder_position_in_world_frame(
 
     return torch.cat((center.data.root_pos_w, pipe.data.root_pos_w, pin.data.root_pos_w), dim=1)
 
+def pin_pos_in_env_frame(
+        env: ManagerBasedRLEnv,
+        asset_cfg: SceneEntityCfg = SceneEntityCfg("pin"),
+) -> torch.Tensor:
+    asset: RigidObject = env.scene[asset_cfg.name]
+
+    return torch.cat(asset.data.root_pos_w, dim=1)
+
 def gripper_pos(
         env: ManagerBasedRLEnv,
         robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")

@@ -69,6 +69,7 @@ class FrankaCylinderSceneCfg(InteractiveSceneCfg):
             usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/pipe.usd",
             articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
             scale=(2.0, 2.0, 2.0),
+            mass_props=sim_utils.MassPropertiesCfg(mass=10000.0),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.5, 0.0, 0.1)),
     )
@@ -118,6 +119,7 @@ class ObservationsCfg:
         joint_vel_rel = ObsTerm(func=mdp.joint_vel_rel)
 
         cylinder_pos = ObsTerm(func=mdp.cylinder_position_in_world_frame)
+        #pin_pos = ObsTerm(func=mdp.pin_pos_in_env_frame)
         gripper_pos = ObsTerm(func=mdp.gripper_pos)
 
         def __post_init__(self) -> None:
@@ -125,43 +127,8 @@ class ObservationsCfg:
             self.enable_corruption = False
             self.concatenate_terms = True
 
-    @configclass
-    class SubtaskCfg(ObsGroup):
-        """Observations for subtask group."""
-
-        grasp_center = ObsTerm(
-            func=mdp.object_grasped,
-            params={
-                "robot_cfg": SceneEntityCfg("robot"),
-                "ee_frame_cfg": SceneEntityCfg("ee_frame"),
-                "object_cfg": SceneEntityCfg("center"),
-            }
-        )
-        grasp_pipe = ObsTerm(
-            func=mdp.object_grasped,
-            params={
-                "robot_cfg": SceneEntityCfg("robot"),
-                "ee_frame_cfg": SceneEntityCfg("ee_frame"),
-                "object_cfg": SceneEntityCfg("pipe"),
-            }
-        )
-        grasp_pin = ObsTerm(
-            func=mdp.object_grasped,
-            params={
-                "robot_cfg": SceneEntityCfg("robot"),
-                "ee_frame_cfg": SceneEntityCfg("ee_frame"),
-                "object_cfg": SceneEntityCfg("pin"),
-            }
-        )
-
-        def __post_init__(self) -> None:
-            # same style as the cartpole
-            self.enable_corruption = False
-            self.concatenate_terms = False
-
     # observation groups
     policy: PolicyCfg = PolicyCfg()  # single group named policy
-    subtask: SubtaskCfg = SubtaskCfg()
 
 
 @configclass
@@ -174,28 +141,6 @@ class EventCfg:
         mode="reset",
         params={}
     )
-    '''
-    reset_ur10 = EventTerm(
-        func=mdp.reset_joints_by_offset,
-        mode="reset",
-        params={
-            "asset_cfg": SceneEntityCfg("robot"),
-            "joint_names": ["shoulder_pan_joint", "shoulder_lift_joint"],
-            "pos_range": (-0.2, 0.2),
-            "vel_range": (-0.2, 0.2),
-        },
-    )
-
-    reset_box = EventTerm(
-        func=mdp.reset_cylinder_pos,
-        mode="reset",
-        params={
-            "center_cfg": SceneEntityCfg("center"),
-            "pipe_cfg": SceneEntityCfg("pipe"),
-            "pin_cfg": SceneEntityCfg("pin"),
-        },
-    )
-    '''
 
 
 @configclass
@@ -205,69 +150,42 @@ class RewardsCfg:
     # (1) Alive
     alive = RewTerm(func=mdp.is_alive, weight=1.0)
     # (2) Failure penalty
-    terminating = RewTerm(func=mdp.is_terminated, weight=-2.0)
+    terminating = RewTerm(func=mdp.is_terminated, weight=-4.0)
     # (3) Joint velocity penalty
     joint_vel_penalty = RewTerm(
         func=mdp.joint_vel_limits,
         weight=-0.1,
         params={
-            "asset_cfg": SceneEntityCfg("robot"), #TODO: Can specify joints!
+            "asset_cfg": SceneEntityCfg("robot"), # May can specify joints!
             "soft_ratio": 10.0,
         }
     )
     # (4) End effector near objects
-    center_effector_penalty = RewTerm(
-        func=mdp.object_distance_reward,
-        weight=0.05,
-        params={
-            "robot_cfg": SceneEntityCfg("robot"),
-            "ee_frame_cfg": SceneEntityCfg("ee_frame"),
-            "object_cfg": SceneEntityCfg("center"),
-        }
-    )
-    pipe_effector_penalty = RewTerm(
-        func=mdp.object_distance_reward,
-        weight=0.05,
-        params={
-            "robot_cfg": SceneEntityCfg("robot"),
-            "ee_frame_cfg": SceneEntityCfg("ee_frame"),
-            "object_cfg": SceneEntityCfg("pipe"),
-        }
-    )
     pin_effector_penalty = RewTerm(
-        func=mdp.object_distance_reward,
-        weight=0.05,
+        func=mdp.object_frame_distance_lin_reward,
+        weight=0.1,
         params={
             "robot_cfg": SceneEntityCfg("robot"),
             "ee_frame_cfg": SceneEntityCfg("ee_frame"),
             "object_cfg": SceneEntityCfg("pin"),
         }
     )
-    # (5) Objects in correct pos    #TODO: Add final reward
-        # success = RewTerm(func=my_mdp.task_success, weight=5.0)
-    # (4) Object pos compared to target
-    center_penalty = RewTerm(
-        func=mdp.object_distance_lin_reward,
-        weight=3.0,
+    # (5) Pin removed from cylinder
+    pin_removed_reward = RewTerm(
+        func=mdp.object_2_distance_lin_reward,
+        weight=1.0,
         params={
-            "object_cfg": SceneEntityCfg("center"),
-            "target": (0.5, 0.5, 0.0),
+            "main_object_cfg": SceneEntityCfg("pin"),
+            "ref_object_cfg": SceneEntityCfg("pipe"),
         }
     )
+    # (6) Object pos compared to target
     pin_penalty = RewTerm(
-        func=mdp.object_distance_lin_reward,
-        weight=3.0,
+        func=mdp.object_target_distance_lin_reward,
+        weight=5.0,
         params={
             "object_cfg": SceneEntityCfg("pin"),
-            "target": (0.5, -0.5, 0.0),
-        }
-    )
-    pipe_penalty = RewTerm(
-        func=mdp.object_distance_lin_reward,
-        weight=3.0,
-        params={
-            "object_cfg": SceneEntityCfg("pipe"),
-            "target": (1.0, 0.0, 0.0),
+            "target": (0.5, 2.0, 0.0),
         }
     )
 
@@ -280,20 +198,6 @@ class TerminationsCfg:
     # (1) Timeout
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
     # (2) Object outside env
-    center_out = DoneTerm(
-        func=mdp.object_outside_bounds,
-        params={
-            "asset_cfg": SceneEntityCfg("center"),
-            "bounds": (-3.0, 3.0),
-        }
-    )
-    pipe_out = DoneTerm(
-        func=mdp.object_outside_bounds,
-        params={
-            "asset_cfg": SceneEntityCfg("pipe"),
-            "bounds": (-3.0, 3.0),
-        }
-    )
     pin_out = DoneTerm(
         func=mdp.object_outside_bounds,
         params={
@@ -336,6 +240,10 @@ class FrankaCylinderEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.dt = 1 / 120
         self.sim.render_interval = self.decimation
 
+
+        """
+        Tool frame configurations
+        """
         marker_cfg = FRAME_MARKER_CFG.copy()
         marker_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
         marker_cfg.prim_path = "/Visuals/FrameTransformer"
