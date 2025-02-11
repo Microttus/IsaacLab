@@ -63,6 +63,7 @@ class FrankaCylinderSceneCfg(InteractiveSceneCfg):
             usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/center.usd",
             articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
             scale=(2.0, 2.0, 2.0),
+            mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.5, 0.0, 0.1)),
     )
@@ -72,7 +73,7 @@ class FrankaCylinderSceneCfg(InteractiveSceneCfg):
             usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/pipe.usd",
             articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
             scale=(2.0, 2.0, 2.0),
-            mass_props=sim_utils.MassPropertiesCfg(mass=10000.0),
+            mass_props=sim_utils.MassPropertiesCfg(mass=1000000.0),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.5, 0.0, 0.1)),
     )
@@ -82,6 +83,7 @@ class FrankaCylinderSceneCfg(InteractiveSceneCfg):
             usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/pin.usd",
             articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
             scale=(2.0, 2.0, 2.0),
+            mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.5, 0.0, 0.1)),
     )
