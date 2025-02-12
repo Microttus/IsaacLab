@@ -73,7 +73,7 @@ class FrankaCylinderSceneCfg(InteractiveSceneCfg):
             usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/pipe.usd",
             articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
             scale=(2.0, 2.0, 2.0),
-            mass_props=sim_utils.MassPropertiesCfg(mass=1000000.0),
+            mass_props=sim_utils.MassPropertiesCfg(mass=10000.0),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.5, 0.0, 0.1)),
     )
@@ -94,13 +94,13 @@ class FrankaCylinderSceneCfg(InteractiveSceneCfg):
 #
 
 @configclass
-class ActionCfg:
+class ActionsCfg:
     """Action configuration with implemented inverse kinematics."""
     arm_action = DifferentialInverseKinematicsActionCfg(
         asset_name="robot",
         joint_names=["panda_joint.*"],
         body_name="panda_hand",
-        controller=DifferentialIKControllerCfg(command_type="pose", uses_relative_mode=True, ik_method="dls"),
+        controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
         scale=0.5,
         body_offset=DifferentialInverseKinematicsActionCfg.OffsetCfg(pos=[0.0, 0.0, 0.107]),
     )
@@ -151,14 +151,14 @@ class RewardsCfg:
     # (2) Failure penalty
     terminating = RewTerm(func=mdp.is_terminated, weight=-4.0)
     # (3) Joint velocity penalty
-    joint_vel_penalty = RewTerm(
-        func=mdp.joint_vel_limits,
-        weight=-0.1,
-        params={
-            "asset_cfg": SceneEntityCfg("robot"), # May can specify joints!
-            "soft_ratio": 10.0,
-        }
-    )
+    #joint_vel_penalty = RewTerm(
+    #    func=mdp.joint_vel_limits,
+    #    weight=-0.1,
+    #    params={
+    #        "asset_cfg": SceneEntityCfg("robot"), # May can specify joints!
+    #        "soft_ratio": 10.0,
+    #    }
+    # )
     # (4) End effector near objects
     pin_effector_penalty = RewTerm(
         func=mdp.object_frame_distance_lin_reward,
