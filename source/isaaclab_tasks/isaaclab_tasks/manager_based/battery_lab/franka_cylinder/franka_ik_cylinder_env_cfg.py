@@ -51,39 +51,36 @@ class FrankaCylinderSceneCfg(InteractiveSceneCfg):
 
     # Franka
     robot: ArticulationCfg = FRANKA_PANDA_HIGH_PD_CFG.replace(
-        prim_path="/World/envs/env_.*/Franka"
+        prim_path="{ENV_REGEX_NS}/Franka"
     )
     # Listens to the required transforms
     ee_frame: FrameTransformerCfg = MISSING
 
     # Add a custom CAD
     center: RigidObjectCfg = RigidObjectCfg(
-        prim_path="/World/envs/env_.*/Center",
+        prim_path="{ENV_REGEX_NS}/Center",
         spawn=sim_utils.UsdFileCfg(
-            usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/center.usd",
+            usd_path="/home/rhino/IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/battery_lab/franka_cylinder/mesh/center2.usd",
             articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
             scale=(2.0, 2.0, 2.0),
-            mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.5, 0.0, 0.1)),
     )
     pipe: RigidObjectCfg = RigidObjectCfg(
-        prim_path="/World/envs/env_.*/Pipe",
+        prim_path="{ENV_REGEX_NS}/Pipe",
         spawn=sim_utils.UsdFileCfg(
             usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/pipe.usd",
             articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
             scale=(2.0, 2.0, 2.0),
-            mass_props=sim_utils.MassPropertiesCfg(mass=10000.0),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.5, 0.0, 0.1)),
     )
     pin: RigidObjectCfg = RigidObjectCfg(
-        prim_path="/World/envs/env_.*/Pin",
+        prim_path="{ENV_REGEX_NS}/Pin",
         spawn=sim_utils.UsdFileCfg(
             usd_path="/home/rhino/IsaacLab/source/battery_lab/managed/ur10_box/pin.usd",
             articulation_props=ArticulationRootPropertiesCfg(articulation_enabled=False),
             scale=(2.0, 2.0, 2.0),
-            mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.5, 0.0, 0.1)),
     )
@@ -151,14 +148,14 @@ class RewardsCfg:
     # (2) Failure penalty
     terminating = RewTerm(func=mdp.is_terminated, weight=-4.0)
     # (3) Joint velocity penalty
-    #joint_vel_penalty = RewTerm(
-    #    func=mdp.joint_vel_limits,
-    #    weight=-0.1,
-    #    params={
-    #        "asset_cfg": SceneEntityCfg("robot"), # May can specify joints!
-    #        "soft_ratio": 10.0,
-    #    }
-    # )
+    joint_vel_penalty = RewTerm(
+        func=mdp.joint_vel_limits,
+        weight=-0.1,
+        params={
+           "asset_cfg": SceneEntityCfg("robot"), # May can specify joints!
+           "soft_ratio": 10.0,
+        }
+    )
     # (4) End effector near objects
     pin_effector_penalty = RewTerm(
         func=mdp.object_frame_distance_lin_reward,
@@ -167,12 +164,13 @@ class RewardsCfg:
             "robot_cfg": SceneEntityCfg("robot"),
             "ee_frame_cfg": SceneEntityCfg("ee_frame"),
             "object_cfg": SceneEntityCfg("pin"),
+            "scale": float(4)
         }
     )
     # (5) Pin removed from cylinder
     pin_removed_reward = RewTerm(
         func=mdp.object_2_distance_lin_reward,
-        weight=1.0,
+        weight=3.0,
         params={
             "main_object_cfg": SceneEntityCfg("pin"),
             "ref_object_cfg": SceneEntityCfg("pipe"),
@@ -181,13 +179,14 @@ class RewardsCfg:
     # (6) Object pos compared to target
     pin_penalty = RewTerm(
         func=mdp.object_target_distance_lin_reward,
-        weight=5.0,
+        weight=2.0,
         params={
             "object_cfg": SceneEntityCfg("pin"),
             "target": (0.5, 2.0, 0.0),
+            "scale": 3.0,
         }
     )
-
+    # (7) Final reward TODO: Add this when more items are implemented
 
 
 @configclass
@@ -216,10 +215,8 @@ class TerminationsCfg:
 class FrankaCylinderEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the UR10 + box manager-based environment."""
 
-    print(f"NVIDIA root dir : {ISAACLAB_NUCLEUS_DIR}/NVIDIA")
-
     # scene settings
-    scene: FrankaCylinderSceneCfg = FrankaCylinderSceneCfg(num_envs=64, env_spacing=2.0)
+    scene: FrankaCylinderSceneCfg = FrankaCylinderSceneCfg(num_envs=4096, env_spacing=3.0)
     # MDP settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()

@@ -64,6 +64,7 @@ def object_frame_distance_lin_reward(
 
     # Get the world positions.
     object_pos = obj.data.root_pos_w      # Expected shape: [num_envs, dims]
+    end_effector_pos = ee_frame.data.target_pos_w
     end_effector_pos = ee_frame.data.target_pos_w[:, 0, :]  # Expected shape: [num_envs, dims]
 
     # Compute the Euclidean distance between the object and the end effector.
@@ -73,7 +74,7 @@ def object_frame_distance_lin_reward(
     # and close to 0 when the distance is large.
     reward = torch.exp(-scale * distance)
 
-    return reward
+    return torch.sum(reward)
 
 
 def object_target_distance_lin_reward(
@@ -115,7 +116,7 @@ def object_target_distance_lin_reward(
     # Compute the reward using an exponential decay: the closer the object is to the target, the higher the reward.
     reward = torch.exp(-scale * distance)
 
-    return reward
+    return torch.sum(reward)
 
 def object_2_distance_lin_reward(
     env: ManagerBasedRLEnv,
@@ -151,4 +152,4 @@ def object_2_distance_lin_reward(
     # and close to 0 when the distance is large.
     reward = 1 - torch.exp(-scale * distance)
 
-    return reward
+    return torch.sum(reward)

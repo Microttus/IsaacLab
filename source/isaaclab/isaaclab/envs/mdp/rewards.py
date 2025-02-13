@@ -215,6 +215,7 @@ def joint_vel_limits(
     )
     # clip to max error = 1 rad/s per joint to avoid huge penalties
     out_of_limits = out_of_limits.clip_(min=0.0, max=1.0)
+
     return torch.sum(out_of_limits, dim=1)
 
 
