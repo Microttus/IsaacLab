@@ -170,7 +170,7 @@ class RewardsCfg:
     # (3) Joint velocity penalty
     joint_vel_penalty = RewTerm(
         func=mdp.joint_vel_limits,
-        weight=-0.1,
+        weight=-0.01,
         params={
            "asset_cfg": SceneEntityCfg("robot"), # May can specify joints!
            "soft_ratio": 10.0,
@@ -179,12 +179,12 @@ class RewardsCfg:
     # (4) End effector near objects
     pin_effector_penalty = RewTerm(
         func=mdp.object_frame_distance_lin_reward,
-        weight=0.1,
+        weight=0.05,
         params={
             "robot_cfg": SceneEntityCfg("robot"),
             "ee_frame_cfg": SceneEntityCfg("ee_frame"),
             "object_cfg": SceneEntityCfg("pin"),
-            "scale": float(4)
+            "scale": float(3)
         }
     )
     # (5) Pin removed from cylinder
