@@ -129,8 +129,22 @@ class ObservationsCfg:
             self.enable_corruption = False
             self.concatenate_terms = True
 
+    @configclass
+    class SubtaskCfg(ObsGroup):
+        """Observations for subtask group."""
+
+        grasp = ObsTerm(
+            func=mdp.object_grasped,
+            params={
+                "robot_cfg": SceneEntityCfg("robot"),
+                "ee_frame_cfg": SceneEntityCfg("ee_frame"),
+                "object_cfg": SceneEntityCfg("pin"),
+            }
+        )
+
     # observation groups
     policy: PolicyCfg = PolicyCfg()  # single group named policy
+    subtask: SubtaskCfg = SubtaskCfg()
 
 
 @configclass
@@ -219,10 +233,11 @@ class TerminationsCfg:
 
 @configclass
 class FrankaCylinderEnvCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the UR10 + box manager-based environment."""
+    """Configuration for the Franka and hand + cylinder manager-based environment."""
 
     # scene settings
     scene: FrankaCylinderSceneCfg = FrankaCylinderSceneCfg(num_envs=4096, env_spacing=3.0)
+
     # MDP settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
@@ -235,7 +250,7 @@ class FrankaCylinderEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 2
-        self.episode_length_s = 10.0
+        self.episode_length_s = 15.0 # Increased to 15 seconds !
         # viewer
         self.viewer.eye = (8.0, 0.0, 5.0)
         # sim
